@@ -1,10 +1,11 @@
 module Test () where
 
+import           Data.RC4.Pure
+
 import           Data.Bits
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
 import           Data.List
-import           Data.RC4
 import           Data.Word
 import           Control.Monad.State.Lazy
 import           System.Environment
@@ -14,9 +15,9 @@ import           System.Environment
 test :: B.ByteString -> B.ByteString -> (String, String)
 test key txt = (toHex a, toHex b)
   where
-    rc4 = ksa key
-    a = B.pack $ evalState (replicateM (B.length txt) prga) rc4
-    b = evalState (encrypt txt) rc4
+    r = schedule key
+    a = evalState (produce (B.length txt)) r
+    b = evalState (combine txt) r
 
 toHex :: B.ByteString -> String
 toHex = concatMap hex . B.unpack

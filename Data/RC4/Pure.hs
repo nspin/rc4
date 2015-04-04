@@ -1,8 +1,9 @@
-module Data.RC4
+module Data.RC4.Pure
     ( RC4
-    , ksa
-    , prga
-    , encrypt
+    , schedule
+    , generate
+    , produce
+    , combine
     ) where
 
 -- | Usage:
@@ -23,8 +24,8 @@ data RC4 = RC4 Word8 Word8 Arr
 -- Key scheduling algorithm
 -------------------------------------
 
-ksa :: B.ByteString -> RC4
-ksa key = RC4 0 0 . snd $ foldl mix (0, start) words
+schedule :: B.ByteString -> RC4
+schedule key = RC4 0 0 . snd $ foldl mix (0, start) words
 
   where
 
@@ -40,8 +41,8 @@ ksa key = RC4 0 0 . snd $ foldl mix (0, start) words
 -- Pseudo-random generation algorithm
 -------------------------------------
 
-prga :: State RC4 Word8
-prga = state $ \(RC4 i j arr) ->
+generate :: State RC4 Word8
+generate = state $ \(RC4 i j arr) ->
     let i' = i + 1
         j' = j + arr!i'
         arr' = swap i j arr
@@ -51,8 +52,14 @@ prga = state $ \(RC4 i j arr) ->
 -- CONVENIENCE
 -------------------------------------
 
-encrypt :: B.ByteString -> State RC4 B.ByteString
-encrypt b = fmap (zipWith' xor b . B.pack) $ replicateM (B.length b) prga
+produce :: Int -> State RC4 B.ByteString
+produce = fmap B.pack . flip replicateM generate
+
+discard :: Int -> State RC4 ()
+discard = flip replicateM_ generate
+
+combine :: B.ByteString -> State RC4 B.ByteString
+combine b = fmap (zipWith' xor b) . produce $ B.length b
 
 -------------------------------------
 -- HELPERS
