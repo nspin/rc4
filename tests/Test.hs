@@ -1,6 +1,6 @@
 module Test () where
 
-import           Data.RC4.Pure
+import           Data.RC4.IO
 
 import           Data.Bits
 import qualified Data.ByteString as B
@@ -12,12 +12,18 @@ import           System.Environment
 
 -- For use with the examples on /wiki/RC4
 
-test :: B.ByteString -> B.ByteString -> (String, String)
-test key txt = (toHex a, toHex b)
-  where
-    r = schedule key
-    a = evalState (produce (B.length txt)) r
-    b = evalState (combine txt) r
+-- test :: B.ByteString -> B.ByteString -> (String, String)
+-- test key txt = (toHex a, toHex b)
+--   where
+--     r = schedule key
+--     a = evalState (produce (B.length txt)) r
+--     b = evalState (combine txt) r
+
+test :: B.ByteString -> B.ByteString -> IO ()
+test key txt = do
+    rc4 <- schedule key
+    enc <- combine rc4 txt
+    putStrLn $ toHex enc
 
 toHex :: B.ByteString -> String
 toHex = concatMap hex . B.unpack

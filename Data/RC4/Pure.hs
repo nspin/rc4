@@ -6,9 +6,9 @@ module Data.RC4.Pure
     , combine
     ) where
 
--- | Usage:
--- Basically just the state monad.
--- 'replicateM n' gets n bytes, 'replicateM_ n discards n bytes, etc.
+-- IMPORTANT NOTE: THIS IS A DUMB MODULE. IT IS EXTREMELY INEFFIENT.
+-- IT'S ONLY ADVANTAGE IS BEING THE ABILITY TO BE USED IN PURE CODE,
+-- BUT THE ST MODULE IS BETTER.
 
 import           Data.Array.Unboxed
 import           Data.Bits
@@ -55,8 +55,8 @@ generate = state $ \(RC4 i j arr) ->
 produce :: Int -> State RC4 B.ByteString
 produce = fmap B.pack . flip replicateM generate
 
-discard :: Int -> State RC4 ()
-discard = flip replicateM_ generate
+produce_ :: Int -> State RC4 ()
+produce_ = flip replicateM_ generate
 
 combine :: B.ByteString -> State RC4 B.ByteString
 combine b = fmap (zipWith' xor b) . produce $ B.length b
