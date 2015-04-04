@@ -1,14 +1,13 @@
-module Test () where
+module Test where
 
-import           Data.RC4.IO
+import           Crypto.Cipher.RC4
 
+import           Control.Monad.ST
 import           Data.Bits
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
 import           Data.List
 import           Data.Word
-import           Control.Monad.State.Lazy
-import           System.Environment
 
 -- For use with the examples on /wiki/RC4
 
@@ -19,10 +18,16 @@ import           System.Environment
 --     a = evalState (produce (B.length txt)) r
 --     b = evalState (combine txt) r
 
+-- test :: B.ByteString -> B.ByteString -> IO ()
+-- test key txt = do
+--     rc4 <- schedule key
+--     enc <- combine rc4 txt
+--     putStrLn $ toHex enc
+
 test :: B.ByteString -> B.ByteString -> IO ()
 test key txt = do
-    rc4 <- schedule key
-    enc <- combine rc4 txt
+    r <- stToIO $ schedule key
+    enc <- stToIO $ combine r txt
     putStrLn $ toHex enc
 
 toHex :: B.ByteString -> String
