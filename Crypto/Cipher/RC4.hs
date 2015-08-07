@@ -3,10 +3,11 @@ module Crypto.Cipher.RC4
     , schedule
     , generate
     , produce
-    , produce_
+    , discard
     , combine
     ) where
 
+import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.ST
 import           Data.Array.ST
@@ -58,14 +59,14 @@ generate (RC4 ir jr arr) = do
 -- CONVENIENCE
 -------------------------------------
 
-produce :: RC4 s -> Int -> ST s B.ByteString
-produce r = fmap B.pack . flip replicateM (generate r)
+produce :: Int -> RC4 s -> ST s B.ByteString
+produce n r = fmap B.pack $ replicateM n (generate r)
 
-produce_ :: RC4 s -> Int -> ST s ()
-produce_ r = flip replicateM_ (generate r)
+discard :: Int -> RC4 s -> ST s ()
+discard = ((.).(.)) void produce
 
-combine :: RC4 s -> B.ByteString -> ST s B.ByteString
-combine r b = zipWith' xor b <$> produce r (B.length b)
+combine :: B.ByteString -> RC4 s -> ST s B.ByteString
+combine b = fmap (zipWith' xor b) . produce (B.length b)
 
 -------------------------------------
 -- HELPERS
