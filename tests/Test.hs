@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Test where
 
 import           Crypto.Cipher.RC4
@@ -8,27 +10,25 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
 import           Data.List
 import           Data.Word
+import           System.Exit
 
--- For use with the examples on /wiki/RC4
+-- TODO: Be a bit more rigorous
+main :: IO ()
+main = do
+    ok <- stToIO $ check exp "key" "hello" 0
+    if ok then exitSuccess else exitFailure
+ where exp = B.pack [0x63, 0x09, 0x58, 0x81, 0x4b]
 
--- test :: B.ByteString -> B.ByteString -> (String, String)
--- test key txt = (toHex a, toHex b)
---   where
---     r = schedule key
---     a = evalState (produce (B.length txt)) r
---     b = evalState (combine txt) r
+-- Given a key and some data, prints the
+encrypt :: B.ByteString -> B.ByteString -> Int -> ST s B.ByteString
+encrypt key txt off = do
+    r <- schedule key
+    discard off r
+    combine txt r
 
--- test :: B.ByteString -> B.ByteString -> IO ()
--- test key txt = do
---     rc4 <- schedule key
---     enc <- combine rc4 txt
---     putStrLn $ toHex enc
-
-test :: B.ByteString -> B.ByteString -> IO ()
-test key txt = do
-    r <- stToIO $ schedule key
-    enc <- stToIO $ combine r txt
-    putStrLn $ toHex enc
+-- Yay functors
+check :: B.ByteString -> B.ByteString -> B.ByteString -> Int -> ST s Bool
+check expected = (fmap.fmap.fmap.fmap) (== expected) encrypt
 
 toHex :: B.ByteString -> String
 toHex = concatMap hex . B.unpack
