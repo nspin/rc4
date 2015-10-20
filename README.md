@@ -18,4 +18,4 @@ generate :: RC4 s -> ST s Word8
 
 Various convenience functions are also provided.
 
-*NOTE:* This package uses strict bytestrings.
+*NOTE:* The type `ByteString` above is exported from `Data.ByteString`, not `Data.ByteString.Lazy`.
